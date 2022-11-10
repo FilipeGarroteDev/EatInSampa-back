@@ -117,7 +117,53 @@ async function deleteRestaurant(req: Request, res: Response) {
 	}
 }
 
-async function updateRestaurantsInfo(req: Request, res: Response) {}
+async function updateRestaurantsInfo(req: Request, res: Response) {
+	const id = Number(req.params.id);
+
+	if (isNaN(id)) {
+		return res
+			.status(422)
+			.send('O id informado não é válido. Revise-o e tente novamente.');
+	}
+
+	const { name, categoryId } = req.body as Restaurant;
+	const { error } = newRestaurantSchema.validate(req.body as Restaurant, {
+		abortEarly: false,
+	});
+
+	if (error) {
+		const messages: string = error.details.map((err) => err.message).join('\n');
+		return res.status(422).send(`Ocorreram os seguintes erros:\n\n${messages}`);
+	}
+
+	try {
+		const hasRestaurant: QueryResult<Restaurant> = await connection.query(
+			`SELECT * FROM restaurants WHERE id = $1`,
+			[id]
+		);
+
+		if (hasRestaurant.rows.length === 0) {
+			return res
+				.status(400)
+				.send(
+					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
+				);
+		}
+
+		await connection.query(
+			`UPDATE 
+        restaurants 
+      SET 
+        name = $1, 
+        "categoryId" = $2 
+      WHERE id = $3`,
+			[name, categoryId, id]
+		);
+		return res.sendStatus(200);
+	} catch (error) {
+		return res.status(500).send(error.message);
+	}
+}
 
 export {
 	listRestaurants,
