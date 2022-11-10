@@ -7,6 +7,6 @@ type RestaurantEntity = {
 	totalAvaliations: number;
 };
 
-type NewRestaurant = Partial<RestaurantEntity>;
+type Restaurant = Partial<RestaurantEntity>;
 
-export { RestaurantEntity, NewRestaurant };
+export { RestaurantEntity, Restaurant };
