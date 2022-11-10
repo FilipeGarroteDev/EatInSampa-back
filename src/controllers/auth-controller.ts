@@ -5,7 +5,7 @@ import {
 	CreatedUser,
 } from '../protocols/users-protocol';
 import bcrypt from 'bcrypt';
-import { loginSchema, signUpSchema } from '../schemas/authSchema.js';
+import { loginSchema, signUpSchema } from '../schemas/auth-schema.js';
 import { connection } from '../database/db.js';
 import jwt from 'jsonwebtoken';
 import { QueryResult } from 'pg';
