@@ -87,7 +87,35 @@ async function insertRestaurant(req: Request, res: Response) {
 	}
 }
 
-async function deleteRestaurant(req: Request, res: Response) {}
+async function deleteRestaurant(req: Request, res: Response) {
+	const id = Number(req.params.id);
+
+	if (isNaN(id)) {
+		return res
+			.status(422)
+			.send('O id informado não é válido. Revise-o e tente novamente.');
+	}
+
+	try {
+		const hasRestaurant: QueryResult<Restaurant> = await connection.query(
+			`SELECT * FROM restaurants WHERE id = $1`,
+			[id]
+		);
+
+		if (hasRestaurant.rows.length === 0) {
+			return res
+				.status(400)
+				.send(
+					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
+				);
+		}
+
+		await connection.query(`DELETE FROM restaurants WHERE id = $1`, [id]);
+		return res.sendStatus(200);
+	} catch (error) {
+		return res.status(500).send(error.message);
+	}
+}
 
 async function updateRestaurantsInfo(req: Request, res: Response) {}
 
