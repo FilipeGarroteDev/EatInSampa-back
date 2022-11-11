@@ -10,6 +10,6 @@ router.post(
 	ratingsController.rateRestaurant
 );
 router.delete('/restaurants/rating/:restaurantId', authMiddleware, ratingsController.deleteRating);
-// router.patch('/restaurants/:id', authMiddleware, ratingsController.updateRestaurantsInfo);
+router.patch('/restaurants/rating/:restaurantId', authMiddleware, ratingsController.changeRatingVote);
 
 export default router;
