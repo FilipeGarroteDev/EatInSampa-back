@@ -73,7 +73,7 @@ async function signIn(req: Request, res: Response) {
 		}
 
 		const config = { expiresIn: 60 * 45 };
-		const token = jwt.sign({ userId }, process.env.JWT_SECRET, config);
+		const token: string = jwt.sign({ userId }, process.env.JWT_SECRET, config);
 
 		await connection.query(
 			'INSERT INTO sessions ("userId", token) VALUES ($1, $2)',
