@@ -41,6 +41,7 @@ async function insertRestaurant(req: Request, res: Response) {
 	const { error } = newRestaurantSchema.validate(req.body, {
 		abortEarly: false,
 	});
+	const {userId} = res.locals
 
 	if (error) {
 		const messages: string = error.details.map((err) => err.message).join('\n');
@@ -77,8 +78,8 @@ async function insertRestaurant(req: Request, res: Response) {
 		}
 
 		await connection.query(
-			'INSERT INTO restaurants (name, "categoryId") VALUES ($1, $2)',
-			[name, categoryId]
+			'INSERT INTO restaurants (name, "categoryId", "creatorId") VALUES ($1, $2, $3)',
+			[name, Number(categoryId), Number(userId)]
 		);
 
 		return res.sendStatus(201);
@@ -89,6 +90,7 @@ async function insertRestaurant(req: Request, res: Response) {
 
 async function deleteRestaurant(req: Request, res: Response) {
 	const id = Number(req.params.id);
+	const { userId } = res.locals;
 
 	if (isNaN(id)) {
 		return res
@@ -110,6 +112,14 @@ async function deleteRestaurant(req: Request, res: Response) {
 				);
 		}
 
+		if (hasRestaurant.rows[0].creatorId !== Number(userId)) {
+			return res
+				.status(400)
+				.send(
+					'Esse usuário não foi quem inseriu o restaurante e, portanto, não pode deletá-lo'
+				);
+		}
+
 		await connection.query(`DELETE FROM restaurants WHERE id = $1`, [id]);
 		return res.sendStatus(200);
 	} catch (error) {
@@ -119,6 +129,7 @@ async function deleteRestaurant(req: Request, res: Response) {
 
 async function updateRestaurantsInfo(req: Request, res: Response) {
 	const id = Number(req.params.id);
+	const { userId } = res.locals;
 
 	if (isNaN(id)) {
 		return res
@@ -147,6 +158,14 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 				.status(400)
 				.send(
 					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
+				);
+		}
+
+		if (hasRestaurant.rows[0].creatorId !== Number(userId)) {
+			return res
+				.status(400)
+				.send(
+					'Esse usuário não foi quem inseriu o restaurante e, portanto, não pode alterá-lo'
 				);
 		}
 
