@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { QueryResult } from 'pg';
-import { connection } from '../database/db';
-import { SessionEntity } from '../protocols/session-protocol';
+import { connection } from '../database/db.js';
+import { SessionEntity } from '../protocols/session-protocol.js';
 
 async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 	const token: string = req.headers.authorization?.replace('Bearer ', '');
 
 	if (!token) {
-		res
+		return res
 			.status(422)
 			.send(
 				'O token de acesso está expirado ou é inválido. Por favor, refaça o login.'
