@@ -1,5 +1,5 @@
 import { QueryResult } from 'pg';
-import { Request, Response } from 'express';
+import { request, Request, Response } from 'express';
 import { connection } from '../database/db.js';
 import { Rating, RatingEntity } from '../protocols/ratings-protocol.js';
 import { ratingSchema } from '../schemas/ratings-schema.js';
@@ -38,6 +38,16 @@ async function rateRestaurant(req: Request, res: Response) {
 				.send(
 					'Não foi localizado um restaurante com o id informado. Por gentileza, revise os dados'
 				);
+		}
+
+		const searchedRating: QueryResult<RatingEntity> = await connection.query(
+			'SELECT * FROM ratings WHERE "userId" = $1 AND "restaurantId" = $2',
+			[userId, restaurantId]
+		);
+
+		if (searchedRating.rows.length > 0) {
+			changeRatingVote(req, res);
+      return
 		}
 
 		await connection.query(
