@@ -19,7 +19,7 @@ async function rateRestaurant(req: Request, res: Response) {
 
 	if (isNaN(restaurantId)) {
 		return res
-			.status(422)
+			.status(404)
 			.send('O id informado não é válido. Revise-o e tente novamente.');
 	}
 
@@ -68,7 +68,7 @@ async function deleteRating(req: Request, res: Response) {
 
 	if (isNaN(restaurantId)) {
 		return res
-			.status(422)
+			.status(404)
 			.send('O id informado não é válido. Revise-o e tente novamente.');
 	}
 
@@ -111,7 +111,7 @@ async function updateRatingData(req: Request, res: Response) {
 
 	if (isNaN(restaurantId)) {
 		return res
-			.status(422)
+			.status(404)
 			.send('O id informado não é válido. Revise-o e tente novamente.');
 	}
 
@@ -131,7 +131,7 @@ async function updateRatingData(req: Request, res: Response) {
 
 		if (hasRestaurant.rows.length === 0) {
 			return res
-				.status(400)
+				.status(404)
 				.send(
 					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
 				);

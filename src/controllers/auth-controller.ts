@@ -67,7 +67,7 @@ async function signIn(req: Request, res: Response) {
 
 		if (searchedUser.rows.length === 0 || !isValid) {
 			return res
-				.status(422)
+				.status(401)
 				.send(
 					'O e-mail ou a senha informados estão incorretos.\nPor gentileza, verifique os dados e tente novamente'
 				);

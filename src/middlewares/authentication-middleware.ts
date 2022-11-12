@@ -9,7 +9,7 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
 	if (!token) {
 		return res
-			.status(422)
+			.status(401)
 			.send(
 				'O token de acesso está expirado ou é inválido. Por favor, refaça o login.'
 			);
@@ -21,7 +21,7 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
 		if (session.rows.length === 0) {
 			return res
-				.status(422)
+				.status(401)
 				.send('O token informado é inválido. Por favor, refaça o login.');
 		}
 

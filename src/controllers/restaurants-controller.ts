@@ -71,7 +71,7 @@ async function deleteRestaurant(req: Request, res: Response) {
 
 	if (isNaN(id)) {
 		return res
-			.status(422)
+			.status(404)
 			.send('O id informado não é válido. Revise-o e tente novamente.');
 	}
 
@@ -82,7 +82,7 @@ async function deleteRestaurant(req: Request, res: Response) {
 
 		if (hasRestaurant.rows.length === 0) {
 			return res
-				.status(400)
+				.status(404)
 				.send(
 					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
 				);
@@ -90,7 +90,7 @@ async function deleteRestaurant(req: Request, res: Response) {
 
 		if (hasRestaurant.rows[0].creatorId !== userId) {
 			return res
-				.status(400)
+				.status(401)
 				.send(
 					'Esse usuário não foi quem inseriu o restaurante e, portanto, não pode deletá-lo'
 				);
@@ -115,7 +115,7 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 
 	if (isNaN(id)) {
 		return res
-			.status(422)
+			.status(404)
 			.send('O id informado não é válido. Revise-o e tente novamente.');
 	}
 
@@ -137,7 +137,7 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 
 		if (hasRestaurant.rows.length === 0) {
 			return res
-				.status(400)
+				.status(404)
 				.send(
 					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
 				);
@@ -149,7 +149,7 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 				);
 		} else if (hasRestaurant.rows[0].creatorId !== userId) {
 			return res
-				.status(400)
+				.status(401)
 				.send(
 					'Esse usuário não foi quem inseriu o restaurante e, portanto, não pode alterá-lo'
 				);
