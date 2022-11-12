@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { QueryResult } from 'pg';
-import { connection } from '../database/db.js';
 import { SessionEntity } from '../protocols/session-protocol.js';
 import jwt from 'jsonwebtoken';
+import { searchActiveSession } from '../repositories/auth-repository.js';
 
 async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 	const token: string = req.headers.authorization?.replace('Bearer ', '');
@@ -16,11 +16,8 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 	}
 
 	try {
-		const tokenData: number = jwt.verify(token, process.env.JWT_SECRET).userId;
-		const session: QueryResult<SessionEntity> = await connection.query(
-			`SELECT * FROM sessions WHERE token = $1`,
-			[token]
-		);
+		const tokenData: number = Number(jwt.verify(token, process.env.JWT_SECRET).userId);
+		const session: QueryResult<SessionEntity> = await searchActiveSession(token)
 
 		if (session.rows.length === 0) {
 			return res

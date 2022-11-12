@@ -6,13 +6,19 @@ import {
 } from '../protocols/users-protocol';
 import bcrypt from 'bcrypt';
 import { loginSchema, signUpSchema } from '../schemas/auth-schema.js';
-import { connection } from '../database/db.js';
 import jwt from 'jsonwebtoken';
 import { QueryResult } from 'pg';
+import {
+	insertNewUser,
+	loginNewUserSession,
+	searchUserByEmail,
+} from '../repositories/auth-repository.js';
 
 async function signUp(req: Request, res: Response) {
 	const { name, email, password } = req.body as CreatedUser;
 	const { error } = signUpSchema.validate(req.body, { abortEarly: false });
+
+	
 
 	if (error) {
 		const messages: string = error.details.map((err) => err.message).join('\n');
@@ -24,9 +30,8 @@ async function signUp(req: Request, res: Response) {
 	const hashedPassword: string = await bcrypt.hash(password, 10);
 
 	try {
-		const searchedUser: QueryResult<UserEntity> = await connection.query(
-			'SELECT * FROM users WHERE email = $1',
-			[email]
+		const searchedUser: QueryResult<UserEntity> = await searchUserByEmail(
+			email
 		);
 
 		if (searchedUser.rows.length > 0) {
@@ -35,10 +40,7 @@ async function signUp(req: Request, res: Response) {
 				.send('O e-mail informado já existe.\nPor gentileza, revise os dados');
 		}
 
-		await connection.query(
-			'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
-			[name, email, hashedPassword]
-		);
+		insertNewUser(name, email, hashedPassword);
 
 		res.sendStatus(201);
 	} catch (error) {
@@ -56,15 +58,14 @@ async function signIn(req: Request, res: Response) {
 	}
 
 	try {
-		const user: QueryResult<UserEntity> = await connection.query(
-			'SELECT * FROM users WHERE email = $1',
-			[email]
+		const searchedUser: QueryResult<UserEntity> = await searchUserByEmail(
+			email
 		);
-		const userPass = user.rows[0]?.password;
-		const userId = user.rows[0]?.id;
+		const userPass = searchedUser.rows[0]?.password;
+		const userId = searchedUser.rows[0]?.id;
 		const isValid: boolean = await bcrypt.compare(password, userPass);
 
-		if (user.rows.length === 0 || !isValid) {
+		if (searchedUser.rows.length === 0 || !isValid) {
 			return res
 				.status(422)
 				.send(
@@ -75,10 +76,7 @@ async function signIn(req: Request, res: Response) {
 		const config = { expiresIn: 60 * 45 };
 		const token: string = jwt.sign({ userId }, process.env.JWT_SECRET, config);
 
-		await connection.query(
-			'INSERT INTO sessions ("userId", token) VALUES ($1, $2)',
-			[userId, token]
-		);
+		loginNewUserSession(userId, token);
 
 		res.status(200).send(token);
 	} catch (error) {

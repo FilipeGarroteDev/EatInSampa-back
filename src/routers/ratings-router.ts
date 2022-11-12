@@ -9,7 +9,15 @@ router.post(
 	authMiddleware,
 	ratingsController.rateRestaurant
 );
-router.delete('/restaurants/rating/:restaurantId', authMiddleware, ratingsController.deleteRating);
-router.patch('/restaurants/rating/:restaurantId', authMiddleware, ratingsController.changeRatingVote);
+router.delete(
+	'/restaurants/rating/:restaurantId',
+	authMiddleware,
+	ratingsController.deleteRating
+);
+router.patch(
+	'/restaurants/rating/:restaurantId',
+	authMiddleware,
+	ratingsController.updateRatingData
+);
 
 export default router;

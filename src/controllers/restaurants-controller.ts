@@ -1,34 +1,25 @@
 import { QueryResult } from 'pg';
 import { Request, Response } from 'express';
-import { connection } from '../database/db.js';
 import {
 	Restaurant,
 	RestaurantEntity,
 } from '../protocols/restaurants-protocol.js';
 import { newRestaurantSchema } from '../schemas/restaurants-schema.js';
+import {
+	changeRestaurantData,
+	getAllRestaurants,
+	insertNewRestaurant,
+	removeExistentRestaurant,
+	searchCategoryById,
+	searchRestaurantById,
+	searchRestaurantByName,
+} from '../repositories/restaurants-repository.js';
+import { removeExistentRating, searchSpecificRating } from '../repositories/ratings-repository.js';
 
 async function listRestaurants(req: Request, res: Response) {
 	try {
 		const allRestaurants: QueryResult<RestaurantEntity> =
-			await connection.query(`
-      SELECT
-        restaurants.id,
-        restaurants.name,
-        categories.name AS category,
-        CASE 
-          WHEN AVG(ratings.rating) IS NULL
-          THEN 0
-          ELSE TRUNC(AVG(ratings.rating), 2)
-        END AS "averageRating",
-        COUNT(ratings."restaurantId") AS "totalAvaliations"
-      FROM restaurants
-      JOIN categories
-        ON restaurants."categoryId" = categories.id
-      LEFT JOIN ratings
-        ON restaurants.id = ratings."restaurantId"
-      GROUP BY restaurants.id, categories.name
-      ORDER BY "averageRating" DESC;
-    `);
+			await getAllRestaurants();
 
 		return res.status(200).send(allRestaurants.rows);
 	} catch (error) {
@@ -41,7 +32,7 @@ async function insertRestaurant(req: Request, res: Response) {
 	const { error } = newRestaurantSchema.validate(req.body, {
 		abortEarly: false,
 	});
-	const {userId} = res.locals
+	const userId: number = res.locals.userId;
 
 	if (error) {
 		const messages: string = error.details.map((err) => err.message).join('\n');
@@ -49,19 +40,8 @@ async function insertRestaurant(req: Request, res: Response) {
 	}
 
 	try {
-		const hasName: QueryResult<Restaurant> = await connection.query(
-			`
-      SELECT * FROM restaurants WHERE name = $1
-    `,
-			[name]
-		);
-
-		const hasCategory: QueryResult = await connection.query(
-			`
-      SELECT * FROM categories WHERE id = $1
-    `,
-			[categoryId]
-		);
+		const hasName: QueryResult<Restaurant> = await searchRestaurantByName(name);
+		const hasCategory: QueryResult = await searchCategoryById(categoryId);
 
 		if (hasName.rows.length > 0) {
 			return res
@@ -77,10 +57,7 @@ async function insertRestaurant(req: Request, res: Response) {
 				);
 		}
 
-		await connection.query(
-			'INSERT INTO restaurants (name, "categoryId", "creatorId") VALUES ($1, $2, $3)',
-			[name, Number(categoryId), Number(userId)]
-		);
+		insertNewRestaurant(name, categoryId, userId);
 
 		return res.sendStatus(201);
 	} catch (error) {
@@ -90,7 +67,7 @@ async function insertRestaurant(req: Request, res: Response) {
 
 async function deleteRestaurant(req: Request, res: Response) {
 	const id = Number(req.params.id);
-	const { userId } = res.locals;
+	const userId: number = res.locals.userId;
 
 	if (isNaN(id)) {
 		return res
@@ -99,9 +76,8 @@ async function deleteRestaurant(req: Request, res: Response) {
 	}
 
 	try {
-		const hasRestaurant: QueryResult<Restaurant> = await connection.query(
-			`SELECT * FROM restaurants WHERE id = $1`,
-			[id]
+		const hasRestaurant: QueryResult<Restaurant> = await searchRestaurantById(
+			id
 		);
 
 		if (hasRestaurant.rows.length === 0) {
@@ -112,7 +88,7 @@ async function deleteRestaurant(req: Request, res: Response) {
 				);
 		}
 
-		if (hasRestaurant.rows[0].creatorId !== Number(userId)) {
+		if (hasRestaurant.rows[0].creatorId !== userId) {
 			return res
 				.status(400)
 				.send(
@@ -120,7 +96,13 @@ async function deleteRestaurant(req: Request, res: Response) {
 				);
 		}
 
-		await connection.query(`DELETE FROM restaurants WHERE id = $1`, [id]);
+		const hasRatings = await searchSpecificRating(userId, id);
+
+		if(hasRatings.rows.length > 0){
+			removeExistentRating(hasRatings.rows[0].id)
+		}
+
+		removeExistentRestaurant(id);
 		return res.sendStatus(200);
 	} catch (error) {
 		return res.status(500).send(error.message);
@@ -129,7 +111,7 @@ async function deleteRestaurant(req: Request, res: Response) {
 
 async function updateRestaurantsInfo(req: Request, res: Response) {
 	const id = Number(req.params.id);
-	const { userId } = res.locals;
+	const userId: number = res.locals.userId;
 
 	if (isNaN(id)) {
 		return res
@@ -148,10 +130,10 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 	}
 
 	try {
-		const hasRestaurant: QueryResult<Restaurant> = await connection.query(
-			`SELECT * FROM restaurants WHERE id = $1`,
-			[id]
+		const hasRestaurant: QueryResult<Restaurant> = await searchRestaurantById(
+			id
 		);
+		const hasName: QueryResult<Restaurant> = await searchRestaurantByName(name);
 
 		if (hasRestaurant.rows.length === 0) {
 			return res
@@ -159,9 +141,13 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 				.send(
 					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
 				);
-		}
-
-		if (hasRestaurant.rows[0].creatorId !== Number(userId)) {
+		} else if (hasName.rows.length > 0) {
+			return res
+				.status(409)
+				.send(
+					'Já existe um restaurante com esse nome. Escolha outro ou avalie o já existente.'
+				);
+		} else if (hasRestaurant.rows[0].creatorId !== userId) {
 			return res
 				.status(400)
 				.send(
@@ -169,15 +155,7 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 				);
 		}
 
-		await connection.query(
-			`UPDATE 
-        restaurants 
-      SET 
-        name = $1, 
-        "categoryId" = $2 
-      WHERE id = $3`,
-			[name, categoryId, id]
-		);
+		changeRestaurantData(name, categoryId, id);
 		return res.sendStatus(200);
 	} catch (error) {
 		return res.status(500).send(error.message);
