@@ -1,3 +1,8 @@
+
+<div align="center">
+  <img src="src/assets/logo-eatinsampa.png" />
+</div>
+
 # EatInSampa - back-end
 
 Repositório back-end para a aplicação EatInSampa
