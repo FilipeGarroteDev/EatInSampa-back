@@ -141,7 +141,7 @@ async function updateRestaurantsInfo(req: Request, res: Response) {
 				.send(
 					'Não existe restaurante com o id informado. Revise-o e tente novamente.'
 				);
-		} else if (hasName.rows.length > 0) {
+		} else if (hasName.rows.length > 0 && hasName.rows[0].id != id) {
 			return res
 				.status(409)
 				.send(

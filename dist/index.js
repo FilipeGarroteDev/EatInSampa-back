@@ -1,12 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRouter from './routers/authRouter.js';
+import authRouter from './routers/auth-router.js';
+import restaurantsRouter from './routers/restaurants-router.js';
+import ratingsRouter from './routers/ratings-router.js';
 dotenv.config();
 var server = express();
 server.use(cors());
 server.use(express.json());
 server.use(authRouter);
+server.use(restaurantsRouter);
+server.use(ratingsRouter);
 server.listen(process.env.PORT, function () {
     return console.log("Listening on port ".concat(process.env.PORT));
 });

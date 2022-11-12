@@ -35,11 +35,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 import bcrypt from 'bcrypt';
-import { loginSchema, signUpSchema } from '../schemas/authSchema.js';
-import { connection } from '../database/db.js';
+import { loginSchema, signUpSchema } from '../schemas/auth-schema.js';
+import jwt from 'jsonwebtoken';
+import { insertNewUser, loginNewUserSession, searchUserByEmail, } from '../repositories/auth-repository.js';
 function signUp(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var _a, name, email, password, error, messages, hashedPassword, error_1;
+        var _a, name, email, password, error, messages, hashedPassword, searchedUser, error_1;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -57,11 +58,15 @@ function signUp(req, res) {
                     _b.label = 2;
                 case 2:
                     _b.trys.push([2, 4, , 5]);
-                    // const searchedUser: 
-                    return [4 /*yield*/, connection.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hashedPassword])];
+                    return [4 /*yield*/, searchUserByEmail(email)];
                 case 3:
-                    // const searchedUser: 
-                    _b.sent();
+                    searchedUser = _b.sent();
+                    if (searchedUser.rows.length > 0) {
+                        return [2 /*return*/, res
+                                .status(409)
+                                .send('O e-mail informado já existe.\nPor gentileza, revise os dados')];
+                    }
+                    insertNewUser(name, email, hashedPassword);
                     res.sendStatus(201);
                     return [3 /*break*/, 5];
                 case 4:
@@ -74,18 +79,45 @@ function signUp(req, res) {
     });
 }
 function signIn(req, res) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function () {
-        var _a, email, password, error, messages;
-        return __generator(this, function (_b) {
-            _a = req.body, email = _a.email, password = _a.password;
-            error = loginSchema.validate(req.body, { abortEarly: false }).error;
-            if (error) {
-                messages = error.details.map(function (err) { return err.message; }).join('\n');
-                return [2 /*return*/, res.status(422).send("Ocorreram os seguintes erros:\n\n".concat(messages))];
+        var _c, email, password, error, messages, searchedUser, userPass, userId, isValid, config, token, error_2;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0:
+                    _c = req.body, email = _c.email, password = _c.password;
+                    error = loginSchema.validate(req.body, { abortEarly: false }).error;
+                    if (error) {
+                        messages = error.details.map(function (err) { return err.message; }).join('\n');
+                        return [2 /*return*/, res.status(422).send("Ocorreram os seguintes erros:\n\n".concat(messages))];
+                    }
+                    _d.label = 1;
+                case 1:
+                    _d.trys.push([1, 4, , 5]);
+                    return [4 /*yield*/, searchUserByEmail(email)];
+                case 2:
+                    searchedUser = _d.sent();
+                    userPass = (_a = searchedUser.rows[0]) === null || _a === void 0 ? void 0 : _a.password;
+                    userId = (_b = searchedUser.rows[0]) === null || _b === void 0 ? void 0 : _b.id;
+                    return [4 /*yield*/, bcrypt.compare(password, userPass)];
+                case 3:
+                    isValid = _d.sent();
+                    if (searchedUser.rows.length === 0 || !isValid) {
+                        return [2 /*return*/, res
+                                .status(422)
+                                .send('O e-mail ou a senha informados estão incorretos.\nPor gentileza, verifique os dados e tente novamente')];
+                    }
+                    config = { expiresIn: 60 * 45 };
+                    token = jwt.sign({ userId: userId }, process.env.JWT_SECRET, config);
+                    loginNewUserSession(userId, token);
+                    res.status(200).send(token);
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_2 = _d.sent();
+                    return [2 /*return*/, res.status(500).send(error_2.message)];
+                case 5: return [2 /*return*/];
             }
-            return [2 /*return*/];
         });
     });
 }
 export { signIn, signUp };
-var exemplo = [];
