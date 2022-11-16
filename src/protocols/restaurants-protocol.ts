@@ -10,4 +10,10 @@ type RestaurantEntity = {
 
 type Restaurant = Partial<RestaurantEntity>;
 
-export { RestaurantEntity, Restaurant };
+type NewRestaurant = {
+	name: string;
+	categoryId: number;
+	creatorId: number;
+};
+
+export { RestaurantEntity, Restaurant, NewRestaurant };
