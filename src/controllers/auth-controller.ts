@@ -7,18 +7,16 @@ import {
 import bcrypt from 'bcrypt';
 import { loginSchema, signUpSchema } from '../schemas/auth-schema.js';
 import jwt from 'jsonwebtoken';
-import { QueryResult } from 'pg';
 import {
 	insertNewUser,
 	loginNewUserSession,
 	searchUserByEmail,
 } from '../repositories/auth-repository.js';
+import { SessionEntity } from '../protocols/session-protocol';
 
 async function signUp(req: Request, res: Response) {
 	const { name, email, password } = req.body as CreatedUser;
 	const { error } = signUpSchema.validate(req.body, { abortEarly: false });
-
-	
 
 	if (error) {
 		const messages: string = error.details.map((err) => err.message).join('\n');
@@ -30,17 +28,17 @@ async function signUp(req: Request, res: Response) {
 	const hashedPassword: string = await bcrypt.hash(password, 10);
 
 	try {
-		const searchedUser: QueryResult<UserEntity> = await searchUserByEmail(
+		const searchedUser: UserEntity = await searchUserByEmail(
 			email
 		);
 
-		if (searchedUser.rows.length > 0) {
+		if (searchedUser) {
 			return res
 				.status(409)
 				.send('O e-mail informado já existe.\nPor gentileza, revise os dados');
 		}
 
-		insertNewUser(name, email, hashedPassword);
+		await insertNewUser({name, email, password: hashedPassword} as CreatedUser);
 
 		res.sendStatus(201);
 	} catch (error) {
@@ -58,14 +56,14 @@ async function signIn(req: Request, res: Response) {
 	}
 
 	try {
-		const searchedUser: QueryResult<UserEntity> = await searchUserByEmail(
+		const searchedUser: UserEntity = await searchUserByEmail(
 			email
 		);
-		const userPass = searchedUser.rows[0]?.password;
-		const userId = searchedUser.rows[0]?.id;
-		const isValid: boolean = await bcrypt.compare(password, userPass);
+		const userPass = searchedUser?.password;
+		const userId = searchedUser?.id;
+		const isValid: boolean = userPass ? await bcrypt.compare(password, userPass) : false;
 
-		if (searchedUser.rows.length === 0 || !isValid) {
+		if (!searchedUser || !isValid) {
 			return res
 				.status(401)
 				.send(
@@ -75,8 +73,9 @@ async function signIn(req: Request, res: Response) {
 
 		const config = { expiresIn: 60 * 45 };
 		const token: string = jwt.sign({ userId }, process.env.JWT_SECRET, config);
+		const newSession: Omit<SessionEntity, "id"> = {userId, token};
 
-		loginNewUserSession(userId, token);
+		await loginNewUserSession(newSession);
 
 		res.status(200).send(token);
 	} catch (error) {

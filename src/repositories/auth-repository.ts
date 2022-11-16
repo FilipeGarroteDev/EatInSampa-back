@@ -1,38 +1,33 @@
-import { QueryResult } from 'pg';
-import { connection } from '../database/db.js';
+import { prisma } from '../database/db.js';
 import { SessionEntity } from '../protocols/session-protocol.js';
-import { UserEntity } from '../protocols/users-protocol.js';
+import { CreatedUser } from '../protocols/users-protocol.js';
 
-function searchUserByEmail(email: string): Promise<QueryResult<UserEntity>> {
-	const searchedUser: Promise<QueryResult<UserEntity>> = connection.query(
-		'SELECT * FROM users WHERE email = $1',
-		[email]
-	);
-
-	return searchedUser;
+function searchUserByEmail(email: string) {
+	return prisma.users.findFirst({
+		where: {
+			email,
+		},
+	});
 }
 
-function insertNewUser(name: string, email: string, password: string): void {
-	connection.query(
-		'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
-		[name, email, password]
-	);
+function insertNewUser(newUser: CreatedUser) {
+	return prisma.users.create({
+		data: newUser,
+	});
 }
 
-function loginNewUserSession(userId: number, token: string): void {
-	connection.query('INSERT INTO sessions ("userId", token) VALUES ($1, $2)', [
-		userId,
-		token,
-	]);
+function loginNewUserSession(session: Omit<SessionEntity, 'id'>) {
+	return prisma.sessions.create({
+		data: session,
+	});
 }
 
-function searchActiveSession(
-	token: string
-): Promise<QueryResult<SessionEntity>> {
-	const session: Promise<QueryResult<SessionEntity>> = connection.query(
-		`SELECT * FROM sessions WHERE token = $1`,
-		[token]
-	);
+function searchActiveSession(token: string) {
+	const session = prisma.sessions.findUnique({
+		where: {
+			token,
+		},
+	});
 	return session;
 }
 

@@ -17,9 +17,9 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
 	try {
 		const tokenData: number = Number(jwt.verify(token, process.env.JWT_SECRET).userId);
-		const session: QueryResult<SessionEntity> = await searchActiveSession(token)
+		const session = await searchActiveSession(token)
 
-		if (session.rows.length === 0) {
+		if (!session.id) {
 			return res
 				.status(401)
 				.send('O token informado é inválido. Por favor, refaça o login.');
