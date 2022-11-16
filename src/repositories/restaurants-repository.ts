@@ -1,5 +1,5 @@
 import { QueryResult } from 'pg';
-import { connection, prisma } from '../database/db.js';
+import { prisma } from '../database/db.js';
 import {
 	NewRestaurant,
 	RestaurantEntity,

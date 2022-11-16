@@ -1,6 +1,5 @@
-import { QueryResult } from 'pg';
 import { prisma } from '../database/db.js';
-import { RatingEntity } from '../protocols/ratings-protocol.js';
+import { NewRating } from '../protocols/ratings-protocol.js';
 import { searchRestaurantById } from './restaurants-repository.js';
 
 function searchSpecificRating(userId: number, restaurantId: number) {
@@ -13,15 +12,16 @@ function searchSpecificRating(userId: number, restaurantId: number) {
 	return ratingPromise;
 }
 
-function insertNewRating(
-	userId: number,
-	restaurantId: number,
-	rating: number
-): void {
-	connection.query(
-		'INSERT INTO ratings ("userId", "restaurantId", rating) VALUES ($1, $2, $3)',
-		[userId, restaurantId, rating]
-	);
+function insertOrUpdateRating(rating: NewRating, id: number) {
+	return prisma.ratings.upsert({
+		where: {
+			id,
+		},
+		create: rating,
+		update: {
+			rating: rating.rating,
+		},
+	});
 }
 
 function removeExistentRating(ratingId: number) {
@@ -32,21 +32,9 @@ function removeExistentRating(ratingId: number) {
 	});
 }
 
-function changeRatingVote(rating: number, ratingId: number): void {
-	connection.query(
-		`UPDATE 
-      ratings 
-    SET 
-      rating = $1 
-    WHERE id = $2`,
-		[rating, ratingId]
-	);
-}
-
 export {
 	searchRestaurantById,
 	searchSpecificRating,
-	insertNewRating,
+	insertOrUpdateRating,
 	removeExistentRating,
-	changeRatingVote,
 };
