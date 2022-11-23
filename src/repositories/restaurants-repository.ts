@@ -1,31 +1,48 @@
-import { QueryResult } from 'pg';
-import { prisma } from '../database/db.js';
+import { QueryResult } from "pg";
+import { prisma } from "../database/db.js";
 import {
 	NewRestaurant,
 	RestaurantEntity,
-} from '../protocols/restaurants-protocol.js';
+} from "../protocols/restaurants-protocol.js";
 
-function getAllRestaurants(): Promise<QueryResult<RestaurantEntity>> {
-	const allRestaurants: Promise<QueryResult<RestaurantEntity>> =
-		connection.query(`
-      SELECT
-        restaurants.id,
-        restaurants.name,
-        categories.name AS category,
-        CASE 
-          WHEN AVG(ratings.rating) IS NULL
-          THEN 0
-          ELSE TRUNC(AVG(ratings.rating), 2)
-        END AS "averageRating",
-        COUNT(ratings."restaurantId") AS "totalAvaliations"
-      FROM restaurants
-      JOIN categories
-        ON restaurants."categoryId" = categories.id
-      LEFT JOIN ratings
-        ON restaurants.id = ratings."restaurantId"
-      GROUP BY restaurants.id, categories.name
-      ORDER BY "averageRating" DESC;
-    `);
+function getAllRestaurants() {
+	// const allRestaurants = prisma.restaurants.findMany({
+	// 	select:{
+	// 		id: true,
+	// 		name: true,
+	// 		categories: {
+	// 			select:{
+	// 				name: true,
+	// 			}
+	// 		},
+	// 		_count: {
+	// 			select:{
+	// 				ratings: true
+	// 			}
+	// 		},
+	// 	}
+	// })
+
+	const allRestaurants =
+		prisma.$queryRaw`
+	    SELECT
+	      restaurants.id,
+	      restaurants.name,
+	      categories.name AS category,
+	      CASE
+	        WHEN AVG(ratings.rating) IS NULL
+	        THEN 0
+	        ELSE TRUNC(AVG(ratings.rating), 2)
+	      END AS "averageRating",
+				CAST(COUNT(ratings."restaurantId") AS INTEGER) AS "totalAvaliations"
+	    FROM restaurants
+	    JOIN categories
+	      ON restaurants."categoryId" = categories.id
+	    LEFT JOIN ratings
+	      ON restaurants.id = ratings."restaurantId"
+	    GROUP BY restaurants.id, categories.name
+	    ORDER BY "averageRating" DESC;
+	  `;
 
 	return allRestaurants;
 }
