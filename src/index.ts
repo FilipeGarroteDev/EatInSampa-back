@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRouter from './routers/auth-router.js';
-import restaurantsRouter from './routers/restaurants-router.js';
-import ratingsRouter from './routers/ratings-router.js';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import authRouter from "./routers/auth-router";
+import restaurantsRouter from "./routers/restaurants-router";
+import ratingsRouter from "./routers/ratings-router";
 
 dotenv.config();
 
@@ -17,3 +17,5 @@ server.use(ratingsRouter);
 server.listen(process.env.PORT, () =>
 	console.log(`Listening on port ${process.env.PORT}`)
 );
+
+export default server;

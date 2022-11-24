@@ -3,15 +3,15 @@ import {
 	NewRating,
 	Rating,
 	RatingEntity,
-} from '../protocols/ratings-protocol.js';
-import { ratingSchema } from '../schemas/ratings-schema.js';
-import { Restaurant } from '../protocols/restaurants-protocol.js';
+} from '../protocols/ratings-protocol';
+import { ratingSchema } from '../schemas/ratings-schema';
+import { Restaurant } from '../protocols/restaurants-protocol';
 import {
 	insertOrUpdateRating,
 	removeExistentRating,
 	searchRestaurantById,
 	searchSpecificRating,
-} from '../repositories/ratings-repository.js';
+} from '../repositories/ratings-repository';
 
 async function rateRestaurant(req: Request, res: Response) {
 	const { rating } = req.body as Rating;

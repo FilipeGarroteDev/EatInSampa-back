@@ -4,8 +4,8 @@ import {
 	NewRestaurant,
 	Restaurant,
 	RestaurantEntity,
-} from "../protocols/restaurants-protocol.js";
-import { newRestaurantSchema } from "../schemas/restaurants-schema.js";
+} from "../protocols/restaurants-protocol";
+import { newRestaurantSchema } from "../schemas/restaurants-schema";
 import {
 	changeRestaurantData,
 	getAllRestaurants,
@@ -14,12 +14,12 @@ import {
 	searchCategoryById,
 	searchRestaurantById,
 	searchRestaurantByName,
-} from "../repositories/restaurants-repository.js";
+} from "../repositories/restaurants-repository";
 import {
 	removeExistentRating,
 	searchSpecificRating,
-} from "../repositories/ratings-repository.js";
-import { RatingEntity } from "../protocols/ratings-protocol.js";
+} from "../repositories/ratings-repository";
+import { RatingEntity } from "../protocols/ratings-protocol";
 
 async function listRestaurants(req: Request, res: Response) {
 	try {

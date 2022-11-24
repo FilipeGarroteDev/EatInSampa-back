@@ -1,6 +1,6 @@
-import { prisma } from '../database/db.js';
-import { NewRating } from '../protocols/ratings-protocol.js';
-import { searchRestaurantById } from './restaurants-repository.js';
+import { prisma } from '../database/db';
+import { NewRating } from '../protocols/ratings-protocol';
+import { searchRestaurantById } from './restaurants-repository';
 
 function searchSpecificRating(userId: number, restaurantId: number) {
 	const ratingPromise = prisma.ratings.findFirst({

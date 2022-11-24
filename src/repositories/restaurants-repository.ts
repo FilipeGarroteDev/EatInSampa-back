@@ -1,9 +1,9 @@
 import { QueryResult } from "pg";
-import { prisma } from "../database/db.js";
+import { prisma } from "../database/db";
 import {
 	NewRestaurant,
 	RestaurantEntity,
-} from "../protocols/restaurants-protocol.js";
+} from "../protocols/restaurants-protocol";
 
 function getAllRestaurants() {
 	// const allRestaurants = prisma.restaurants.findMany({

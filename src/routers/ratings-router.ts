@@ -1,6 +1,6 @@
 import express from 'express';
-import * as ratingsController from '../controllers/ratings-controller.js';
-import { authMiddleware } from '../middlewares/authentication-middleware.js';
+import * as ratingsController from '../controllers/ratings-controller';
+import { authMiddleware } from '../middlewares/authentication-middleware';
 
 const router = express.Router();
 

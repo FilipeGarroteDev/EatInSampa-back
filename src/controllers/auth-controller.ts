@@ -5,13 +5,13 @@ import {
 	CreatedUser,
 } from '../protocols/users-protocol';
 import bcrypt from 'bcrypt';
-import { loginSchema, signUpSchema } from '../schemas/auth-schema.js';
+import { loginSchema, signUpSchema } from '../schemas/auth-schema';
 import jwt from 'jsonwebtoken';
 import {
 	insertNewUser,
 	loginNewUserSession,
 	searchUserByEmail,
-} from '../repositories/auth-repository.js';
+} from '../repositories/auth-repository';
 import { SessionEntity } from '../protocols/session-protocol';
 
 async function signUp(req: Request, res: Response) {

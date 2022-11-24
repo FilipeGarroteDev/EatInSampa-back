@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { QueryResult } from 'pg';
-import { SessionEntity } from '../protocols/session-protocol.js';
 import jwt from 'jsonwebtoken';
-import { searchActiveSession } from '../repositories/auth-repository.js';
+import { searchActiveSession } from '../repositories/auth-repository';
 
 async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 	const token: string = req.headers.authorization?.replace('Bearer ', '');

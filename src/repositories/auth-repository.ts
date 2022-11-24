@@ -1,6 +1,6 @@
-import { prisma } from '../database/db.js';
-import { SessionEntity } from '../protocols/session-protocol.js';
-import { CreatedUser } from '../protocols/users-protocol.js';
+import { prisma } from '../database/db';
+import { SessionEntity } from '../protocols/session-protocol';
+import { CreatedUser } from '../protocols/users-protocol';
 
 function searchUserByEmail(email: string) {
 	return prisma.users.findFirst({
